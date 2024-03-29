@@ -37,10 +37,16 @@ public class Role implements GrantedAuthority {
     public enum RoleName {
         ROLE_USER,
         ROLE_ADMIN;
+        private static final int ONE = 1;
 
         public static RoleName fromString(String value) {
+            boolean equalsSubstring;
             for (RoleName role : RoleName.values()) {
-                if (role.name().equalsIgnoreCase(value)) {
+                equalsSubstring =
+                        role.name()
+                                .substring(role.name().indexOf("_") + ONE)
+                                .equalsIgnoreCase(value);
+                if (role.name().equalsIgnoreCase(value) || equalsSubstring) {
                     return role;
                 }
             }
