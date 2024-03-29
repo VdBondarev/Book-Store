@@ -3,18 +3,21 @@ package book.store.service;
 import book.store.dto.UserAdminResponseDto;
 import book.store.dto.UserRegistrationRequestDto;
 import book.store.dto.UserResponseDto;
+import book.store.dto.UserSearchParametersDto;
 import book.store.dto.UserUpdateRequestDto;
 import book.store.exception.RegistrationException;
 import book.store.mapper.UserMapper;
 import book.store.model.Role;
 import book.store.model.User;
 import book.store.repository.UserRepository;
+import book.store.repository.specification.SpecificationBuilder;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final SpecificationBuilder<User, UserSearchParametersDto> specificationBuilder;
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto requestDto)
@@ -89,6 +93,22 @@ public class UserServiceImpl implements UserService {
         userMapper.toModel(user, requestDto);
         userRepository.save(user);
         return userMapper.toResponseDto(user);
+    }
+
+    @Override
+    public List<UserAdminResponseDto> search(
+            UserSearchParametersDto parametersDto,
+            Pageable pageable) {
+        Specification<User> userSpecification = specificationBuilder.build(parametersDto);
+        return userRepository.findAll(userSpecification, pageable)
+                .stream()
+                .map(userMapper::toAdminResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void delete(Long id) {
+        userRepository.deleteById(id);
     }
 
     private boolean userIs(User user, Role.RoleName roleName) {

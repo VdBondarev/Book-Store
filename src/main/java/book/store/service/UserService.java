@@ -3,6 +3,7 @@ package book.store.service;
 import book.store.dto.UserAdminResponseDto;
 import book.store.dto.UserRegistrationRequestDto;
 import book.store.dto.UserResponseDto;
+import book.store.dto.UserSearchParametersDto;
 import book.store.dto.UserUpdateRequestDto;
 import book.store.exception.RegistrationException;
 import book.store.model.User;
@@ -20,4 +21,8 @@ public interface UserService {
     UserResponseDto getMyInfo(User user);
 
     UserResponseDto updateMyInfo(User user, UserUpdateRequestDto requestDto);
+
+    List<UserAdminResponseDto> search(UserSearchParametersDto parametersDto, Pageable pageable);
+
+    void delete(Long id);
 }
