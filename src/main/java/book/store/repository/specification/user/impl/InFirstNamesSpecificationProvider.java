@@ -1,22 +1,23 @@
-package book.store.repository.specification.user;
+package book.store.repository.specification.user.impl;
 
 import book.store.model.User;
+import book.store.repository.specification.user.InSpecificationProvider;
 import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 @Component
-public class InLastNamesSpecificationProvider
+public class InFirstNamesSpecificationProvider
         implements InSpecificationProvider<User, List<String>> {
-    private static final String LAST_NAME_FIELD = "lastName";
+    private static final String FIRST_NAME_FIELD = "firstName";
 
     @Override
     public Specification<User> getSpecification(List<String> params) {
-        return (root, query, criteriaBuilder) -> root.get(LAST_NAME_FIELD).in(params);
+        return (root, query, criteriaBuilder) -> root.get(FIRST_NAME_FIELD).in(params);
     }
 
     @Override
     public String getKey() {
-        return LAST_NAME_FIELD;
+        return FIRST_NAME_FIELD;
     }
 }

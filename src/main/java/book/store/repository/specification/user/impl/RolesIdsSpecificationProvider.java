@@ -1,4 +1,4 @@
-package book.store.repository.specification.user;
+package book.store.repository.specification.user.impl;
 
 import book.store.model.User;
 import java.util.Set;

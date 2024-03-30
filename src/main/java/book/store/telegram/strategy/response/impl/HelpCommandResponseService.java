@@ -17,10 +17,14 @@ public class HelpCommandResponseService implements AdminResponseService {
                 
                 To get info about:
                 1). A user
+                2). A book
+                3) A category
                 
                 Send me a message with the following format:
                 
                 Get info about a user with id: ...
+                Get info about a book with id: ...
+                Get info about a category with id: ...
                 
                 Instead of ... paste id.
                 ***

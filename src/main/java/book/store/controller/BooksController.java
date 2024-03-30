@@ -2,6 +2,7 @@ package book.store.controller;
 
 import book.store.dto.book.BookCreateRequestDto;
 import book.store.dto.book.BookResponseDto;
+import book.store.dto.book.BookSearchParametersDto;
 import book.store.dto.book.BookUpdateDto;
 import book.store.service.book.BookService;
 import jakarta.validation.Valid;
@@ -34,6 +35,13 @@ public class BooksController {
     @GetMapping("/{id}")
     public BookResponseDto getBookById(@PathVariable Long id) {
         return bookService.getBookById(id);
+    }
+
+    @GetMapping("/search")
+    public List<BookResponseDto> search(
+            @RequestBody BookSearchParametersDto parametersDto,
+            Pageable pageable) {
+        return bookService.search(parametersDto, pageable);
     }
 
     @PostMapping

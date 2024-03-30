@@ -1,8 +1,8 @@
 package book.store.mapper;
 
 import book.store.config.MapperConfig;
-import book.store.dto.CategoryUpdateDto;
 import book.store.dto.category.CategoryResponseDto;
+import book.store.dto.category.CategoryUpdateDto;
 import book.store.dto.category.CreateCategoryRequestDto;
 import book.store.model.Category;
 import org.mapstruct.Mapper;

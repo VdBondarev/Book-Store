@@ -1,7 +1,7 @@
 package book.store.controller;
 
-import book.store.dto.CategoryUpdateDto;
 import book.store.dto.category.CategoryResponseDto;
+import book.store.dto.category.CategoryUpdateDto;
 import book.store.dto.category.CreateCategoryRequestDto;
 import book.store.service.category.CategoryService;
 import jakarta.validation.Valid;

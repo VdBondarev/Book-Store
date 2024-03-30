@@ -1,4 +1,4 @@
-package book.store.dto;
+package book.store.dto.category;
 
 import book.store.annotation.StartsWithCapital;
 

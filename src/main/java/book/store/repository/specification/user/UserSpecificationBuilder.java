@@ -3,6 +3,7 @@ package book.store.repository.specification.user;
 import book.store.dto.user.UserSearchParametersDto;
 import book.store.model.User;
 import book.store.repository.specification.SpecificationBuilder;
+import book.store.repository.specification.user.impl.RolesIdsSpecificationProvider;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
