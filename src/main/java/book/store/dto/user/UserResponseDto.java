@@ -1,4 +1,4 @@
-package book.store.dto;
+package book.store.dto.user;
 
 public record UserResponseDto(
         Long id,

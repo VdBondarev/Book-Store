@@ -1,12 +1,12 @@
 package book.store.controller;
 
-import book.store.dto.UserLoginRequestDto;
-import book.store.dto.UserLoginResponseDto;
-import book.store.dto.UserRegistrationRequestDto;
-import book.store.dto.UserResponseDto;
+import book.store.dto.user.UserLoginRequestDto;
+import book.store.dto.user.UserLoginResponseDto;
+import book.store.dto.user.UserRegistrationRequestDto;
+import book.store.dto.user.UserResponseDto;
 import book.store.exception.RegistrationException;
 import book.store.security.AuthenticationService;
-import book.store.service.UserService;
+import book.store.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

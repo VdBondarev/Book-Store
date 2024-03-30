@@ -1,4 +1,4 @@
-package book.store.dto;
+package book.store.dto.user;
 
 import book.store.annotation.FieldMatch;
 import book.store.annotation.StartsWithCapital;

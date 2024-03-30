@@ -1,10 +1,10 @@
-package book.store.service;
+package book.store.service.user;
 
-import book.store.dto.UserAdminResponseDto;
-import book.store.dto.UserRegistrationRequestDto;
-import book.store.dto.UserResponseDto;
-import book.store.dto.UserSearchParametersDto;
-import book.store.dto.UserUpdateRequestDto;
+import book.store.dto.user.UserAdminResponseDto;
+import book.store.dto.user.UserRegistrationRequestDto;
+import book.store.dto.user.UserResponseDto;
+import book.store.dto.user.UserSearchParametersDto;
+import book.store.dto.user.UserUpdateRequestDto;
 import book.store.exception.RegistrationException;
 import book.store.model.User;
 import java.util.List;

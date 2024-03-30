@@ -22,7 +22,7 @@ public class RoleUpdatingNotificationService
                 .map(Role.RoleName::toString)
                 .toList()
                 + " , user id is "
-                + user.getId();
+                + user.getId() + ".";
         sendMessage(TELEGRAM, chatId, message);
     }
 
