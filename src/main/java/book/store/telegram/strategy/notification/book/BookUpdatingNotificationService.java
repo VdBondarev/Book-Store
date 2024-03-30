@@ -20,10 +20,11 @@ public class BookUpdatingNotificationService
                 Book was updated.
                 
                 Now it looks like:
-                Id: %,
+                
+                Id: %s,
                 Title: %s,
                 Author: %s,
-                ISBN: %S,
+                ISBN: %s,
                 Description: %s,
                 Cover image: %s,
                 Categories ids: %s.

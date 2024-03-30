@@ -5,10 +5,9 @@ import book.store.model.Category;
 import book.store.repository.BookRepository;
 import book.store.telegram.strategy.response.AdminResponseService;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,15 +23,17 @@ public class AdminGetBookResponseService implements AdminResponseService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "There is no book by id " + id));
         String message = """
-                A new book is created.
+                ***
+                Found this book.
                                 
-                Id: %,
+                Id: %s,
                 Title: %s,
                 Author: %s,
-                ISBN: %S,
+                ISBN: %s,
                 Description: %s,
                 Cover image: %s,
-                Categories ids: %s.
+                Categories : %s.
+                ***
                 """;
         return String.format(message,
                 book.getId(),
@@ -41,7 +42,7 @@ public class AdminGetBookResponseService implements AdminResponseService {
                 book.getIsbn(),
                 book.getDescription(),
                 book.getCoverImage(),
-                book.getCategories().stream().map(Category::getId).collect(Collectors.toList()));
+                book.getCategories().stream().map(Category::getName).collect(Collectors.toList()));
 
     }
 

@@ -10,7 +10,7 @@ public class BookDeletingNotificationService
         extends AbstractNotificationSender
         implements AdminNotificationService<Book> {
     private static final String TELEGRAM = "Telegram";
-    private static final String CAR_DELETING = "Car deleting";
+    private static final String CAR_DELETING = "Book deleting";
 
     @Override
     public void sendMessage(Long chatId, Book book) {

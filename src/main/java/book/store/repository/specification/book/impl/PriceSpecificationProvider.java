@@ -16,9 +16,13 @@ public class PriceSpecificationProvider {
         if (params.size() == 1) {
             priceFrom = BigDecimal.ZERO;
             priceTo = params.get(0);
-        } else {
+        } else if (params.size() == 2) {
             priceFrom = params.get(0);
             priceTo = params.get(1);
+        } else {
+            throw new IllegalArgumentException(
+                    "Param priceBetween should contain either 1 element, or 2. But was "
+                            + params.size());
         }
         if (priceFrom.compareTo(priceTo) >= 0) {
             throw new IllegalArgumentException("Price from should be bigger than price to, "

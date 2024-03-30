@@ -19,10 +19,10 @@ public class BookCreationNotificationService
         String message = """
                 A new book is created.
                                 
-                Id: %,
+                Id: %s,
                 Title: %s,
                 Author: %s,
-                ISBN: %S,
+                ISBN: %s,
                 Description: %s,
                 Cover image: %s,
                 Categories ids: %s.
