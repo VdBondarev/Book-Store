@@ -11,7 +11,7 @@ public class HelpCommandResponseService implements AdminResponseService {
     public String getMessage(String text) {
         return """
                 ***
-                This bot is for admins of car this car sharing application only.
+                This bot is for admins of this book store application only.
                 
                 It will send you notifications about main operations happening in the application.
                 
