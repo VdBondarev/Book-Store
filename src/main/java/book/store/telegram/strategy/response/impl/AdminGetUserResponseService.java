@@ -1,9 +1,12 @@
 package book.store.telegram.strategy.response.impl;
 
+import book.store.model.Role;
 import book.store.model.User;
 import book.store.repository.UserRepository;
 import book.store.telegram.strategy.response.AdminResponseService;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,14 +30,20 @@ public class AdminGetUserResponseService implements AdminResponseService {
                     
                     First name: %s,
                     Last name: %s,
-                    Email: %s.
+                    Email: %s,
+                    Roles: %s.
                     ***
                     """;
+        List<Role.RoleName> roles = user.get().getRoles()
+                .stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
         return String.format(
                 message,
                 user.get().getFirstName(),
                 user.get().getLastName(),
-                user.get().getEmail());
+                user.get().getEmail(),
+                roles);
     }
 
     @Override
