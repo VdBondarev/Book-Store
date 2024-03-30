@@ -1,5 +1,6 @@
 package book.store.service.category;
 
+import book.store.dto.CategoryUpdateDto;
 import book.store.dto.category.CategoryResponseDto;
 import book.store.dto.category.CreateCategoryRequestDto;
 import book.store.mapper.CategoryMapper;
@@ -44,5 +45,15 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteById(Long id) {
         categoryRepository.deleteById(id);
+    }
+
+    @Override
+    public CategoryResponseDto updateById(Long id, CategoryUpdateDto updateDto) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Can't find a category by id " + id));
+        category = categoryMapper.toModel(category, updateDto);
+        categoryRepository.save(category);
+        return categoryMapper.toResponseDto(category);
     }
 }

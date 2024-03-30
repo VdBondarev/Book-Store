@@ -1,5 +1,6 @@
 package book.store.service.category;
 
+import book.store.dto.CategoryUpdateDto;
 import book.store.dto.category.CategoryResponseDto;
 import book.store.dto.category.CreateCategoryRequestDto;
 import java.util.List;
@@ -13,4 +14,6 @@ public interface CategoryService {
     CategoryResponseDto getCategoryById(Long id);
 
     void deleteById(Long id);
+
+    CategoryResponseDto updateById(Long id, CategoryUpdateDto updateDto);
 }

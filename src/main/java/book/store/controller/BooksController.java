@@ -4,6 +4,7 @@ import book.store.dto.book.BookCreateRequestDto;
 import book.store.dto.book.BookResponseDto;
 import book.store.dto.book.BookUpdateDto;
 import book.store.service.book.BookService;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,7 +39,7 @@ public class BooksController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public BookResponseDto create(@RequestBody BookCreateRequestDto requestDto) {
+    public BookResponseDto create(@RequestBody @Valid BookCreateRequestDto requestDto) {
         return bookService.create(requestDto);
     }
 
@@ -47,14 +47,14 @@ public class BooksController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public BookResponseDto update(
             @PathVariable Long id,
-            @RequestBody BookUpdateDto updateDto) {
+            @RequestBody @Valid BookUpdateDto updateDto) {
         return bookService.updateById(id, updateDto);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public void deleteById(@RequestParam(name = "book_id") Long id) {
+    public void deleteById(@PathVariable Long id) {
         bookService.deleteById(id);
     }
 }

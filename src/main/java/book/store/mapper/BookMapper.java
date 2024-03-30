@@ -39,6 +39,9 @@ public interface BookMapper {
     default void setCategories(
             @MappingTarget Book book,
             BookUpdateDto updateDto) {
+        if (updateDto.categoriesIds() == null || updateDto.categoriesIds().isEmpty()) {
+            return;
+        }
         Set<Category> categories = updateDto.categoriesIds()
                 .stream()
                 .map(Category::new)
