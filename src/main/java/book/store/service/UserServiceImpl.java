@@ -11,6 +11,7 @@ import book.store.model.Role;
 import book.store.model.User;
 import book.store.repository.UserRepository;
 import book.store.repository.specification.SpecificationBuilder;
+import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Set;
@@ -26,10 +27,13 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     private static final int ONE = 1;
     private static final int TWO = 2;
+    private static final String USER_UPDATING = "Role updating";
+    private static final String TELEGRAM = "Telegram";
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final SpecificationBuilder<User, UserSearchParametersDto> specificationBuilder;
+    private final AdminNotificationStrategy<User> notificationStrategy;
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto requestDto)
@@ -73,6 +77,7 @@ public class UserServiceImpl implements UserService {
             user.setRoles(Set.of(new Role(1L)));
         }
         userRepository.save(user);
+        sendMessage(TELEGRAM, USER_UPDATING, null, user);
         return userMapper.toAdminResponseDto(user);
     }
 
@@ -116,5 +121,18 @@ public class UserServiceImpl implements UserService {
             return user.getRoles().size() == ONE;
         }
         return user.getRoles().size() == TWO;
+    }
+
+    private void sendMessage(
+            String notificationsService,
+            String messageType,
+            Long chatId,
+            User user) {
+        notificationStrategy
+                .getNotificationService(
+                        notificationsService, messageType
+                )
+                .sendMessage(
+                        chatId, user);
     }
 }
