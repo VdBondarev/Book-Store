@@ -2,27 +2,23 @@ package book.store.dto.book;
 
 import book.store.annotation.StartsWithCapital;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.util.Set;
 import org.hibernate.validator.constraints.ISBN;
 
-public record BookCreateRequestDto(
-        @NotEmpty
+public record BookUpdateDto(
         @StartsWithCapital
         String title,
-        @NotEmpty
         @StartsWithCapital
         String author,
-        @ISBN
-        String isbn,
-        @Min(0)
-        BigDecimal price,
         @StartsWithCapital
         String description,
         @StartsWithCapital
         String coverImage,
-        @NotEmpty
+        @ISBN
+        String isbn,
+        @Min(0)
+        BigDecimal price,
         Set<Long> categoriesIds
 ) {
 }

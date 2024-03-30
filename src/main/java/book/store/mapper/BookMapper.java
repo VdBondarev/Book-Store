@@ -3,6 +3,7 @@ package book.store.mapper;
 import book.store.config.MapperConfig;
 import book.store.dto.book.BookCreateRequestDto;
 import book.store.dto.book.BookResponseDto;
+import book.store.dto.book.BookUpdateDto;
 import book.store.model.Book;
 import book.store.model.Category;
 import java.util.Set;
@@ -17,6 +18,9 @@ public interface BookMapper {
     @Mapping(target = "categories", ignore = true)
     Book toModel(BookCreateRequestDto requestDto);
 
+    @Mapping(target = "categories", ignore = true)
+    Book toModel(@MappingTarget Book book, BookUpdateDto updateDto);
+
     @Mapping(target = "categoriesIds", ignore = true)
     BookResponseDto toResponseDto(Book book);
 
@@ -29,6 +33,17 @@ public interface BookMapper {
                 .map(Category::getId)
                 .collect(Collectors.toSet());
         responseDto.setCategoriesIds(categoriesIds);
+    }
+
+    @AfterMapping
+    default void setCategories(
+            @MappingTarget Book book,
+            BookUpdateDto updateDto) {
+        Set<Category> categories = updateDto.categoriesIds()
+                .stream()
+                .map(Category::new)
+                .collect(Collectors.toSet());
+        book.setCategories(categories);
     }
 
     @AfterMapping
