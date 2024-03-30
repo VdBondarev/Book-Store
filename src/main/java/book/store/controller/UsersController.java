@@ -1,11 +1,11 @@
 package book.store.controller;
 
-import book.store.dto.UserAdminResponseDto;
-import book.store.dto.UserResponseDto;
-import book.store.dto.UserSearchParametersDto;
-import book.store.dto.UserUpdateRequestDto;
+import book.store.dto.user.UserAdminResponseDto;
+import book.store.dto.user.UserResponseDto;
+import book.store.dto.user.UserSearchParametersDto;
+import book.store.dto.user.UserUpdateRequestDto;
 import book.store.model.User;
-import book.store.service.UserService;
+import book.store.service.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

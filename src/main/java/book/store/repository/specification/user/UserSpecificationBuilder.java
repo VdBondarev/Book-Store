@@ -1,6 +1,6 @@
 package book.store.repository.specification.user;
 
-import book.store.dto.UserSearchParametersDto;
+import book.store.dto.user.UserSearchParametersDto;
 import book.store.model.User;
 import book.store.repository.specification.SpecificationBuilder;
 import java.util.List;

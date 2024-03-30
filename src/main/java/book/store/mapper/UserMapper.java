@@ -1,10 +1,10 @@
 package book.store.mapper;
 
 import book.store.config.MapperConfig;
-import book.store.dto.UserAdminResponseDto;
-import book.store.dto.UserRegistrationRequestDto;
-import book.store.dto.UserResponseDto;
-import book.store.dto.UserUpdateRequestDto;
+import book.store.dto.user.UserAdminResponseDto;
+import book.store.dto.user.UserRegistrationRequestDto;
+import book.store.dto.user.UserResponseDto;
+import book.store.dto.user.UserUpdateRequestDto;
 import book.store.model.Role;
 import book.store.model.User;
 import java.util.Set;

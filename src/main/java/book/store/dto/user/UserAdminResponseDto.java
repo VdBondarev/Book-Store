@@ -1,4 +1,4 @@
-package book.store.dto;
+package book.store.dto.user;
 
 import java.util.Set;
 import lombok.Data;
