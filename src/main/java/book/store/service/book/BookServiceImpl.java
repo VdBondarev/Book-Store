@@ -63,7 +63,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public void deleteById(Long id) {
-        if (bookRepository.findById(id).isEmpty()) {
+        if (bookRepository.findByIdWithoutCategories(id).isEmpty()) {
             return;
         }
         bookRepository.deleteById(id);
