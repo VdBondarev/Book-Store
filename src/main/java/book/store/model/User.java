@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import java.util.Collection;
 import java.util.Set;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -24,6 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Table(name = "users")
 @SQLDelete(sql = "UPDATE users SET is_deleted = TRUE WHERE id = ?")
 @Where(clause = "is_deleted = FALSE")
+@NoArgsConstructor
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +53,10 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles = Set.of(new Role(1L));
+
+    public User(Long id) {
+        this.id = id;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

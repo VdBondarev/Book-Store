@@ -27,7 +27,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/registration")
-    @Operation(summary = "Registration for any user", description = "Endpoint for registration")
+    @Operation(summary = "Registration for any user")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto register(
             @RequestBody @Valid UserRegistrationRequestDto requestDto)
@@ -36,7 +36,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login for signed-up users", description = "Endpoint for login")
+    @Operation(summary = "Login for signed-up users")
     public UserLoginResponseDto login(
             @RequestBody @Valid UserLoginRequestDto requestDto) {
         return authenticationService.authenticate(requestDto);

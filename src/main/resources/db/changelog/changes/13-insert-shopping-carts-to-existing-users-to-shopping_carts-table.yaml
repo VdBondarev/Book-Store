@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-shopping-carts-for-existing_users
+      author: VdBondarev
+      changes:
+        - insert:
+            tableName: shopping_carts
+            columns:
+              - column:
+                  { name: user_id, value: "1" }

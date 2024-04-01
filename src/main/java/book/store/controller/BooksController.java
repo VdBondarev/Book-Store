@@ -31,22 +31,19 @@ public class BooksController {
     private final BookService bookService;
 
     @GetMapping
-    @Operation(summary = "Get all books",
-            description = "Get all books with pageable sorting")
+    @Operation(summary = "Get all books with pageable sorting")
     public List<BookResponseDto> getAll(Pageable pageable) {
         return bookService.getAll(pageable);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get a book by id",
-            description = "Endpoint for getting a book by id")
+    @Operation(summary = "Get a book by id")
     public BookResponseDto getBookById(@PathVariable Long id) {
         return bookService.getBookById(id);
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Find books by params",
-            description = "Endpoint for searching through all books")
+    @Operation(summary = "Find books by params")
     public List<BookResponseDto> search(
             @RequestBody BookSearchParametersDto parametersDto,
             Pageable pageable) {

@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-shoppingCart_item-table
+      author: VdBondarev
+      changes:
+        - createTable:
+            tableName: shopping_cart_item
+            columns:
+              - column:
+                  name: shopping_cart_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_shopping_cart_id
+              - column:
+                  name: item_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_item_id
+      rollback:
+        - dropTable:
+            tableName: shopping_cart_item

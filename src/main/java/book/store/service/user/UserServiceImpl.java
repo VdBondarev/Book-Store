@@ -8,7 +8,9 @@ import book.store.dto.user.UserUpdateRequestDto;
 import book.store.exception.RegistrationException;
 import book.store.mapper.UserMapper;
 import book.store.model.Role;
+import book.store.model.ShoppingCart;
 import book.store.model.User;
+import book.store.repository.ShoppingCartRepository;
 import book.store.repository.UserRepository;
 import book.store.repository.specification.SpecificationBuilder;
 import book.store.telegram.strategy.notification.AdminNotificationStrategy;
@@ -25,15 +27,17 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private static final int ONE = 1;
-    private static final int TWO = 2;
     private static final String USER_UPDATING = "Role updating";
+    private static final String USER_DELETING = "User deleting";
     private static final String TELEGRAM = "Telegram";
+    private static final int TWO = 2;
+    private static final int ONE = 1;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final SpecificationBuilder<User, UserSearchParametersDto> specificationBuilder;
     private final AdminNotificationStrategy<User> notificationStrategy;
+    private final ShoppingCartRepository shoppingCartRepository;
 
     @Override
     public UserResponseDto register(UserRegistrationRequestDto requestDto)
@@ -46,8 +50,10 @@ public class UserServiceImpl implements UserService {
                     """);
         }
         User user = userMapper.toModel(requestDto);
+        ShoppingCart shoppingCart = new ShoppingCart();
         user.setPassword(passwordEncoder.encode(requestDto.password()));
-        userRepository.save(user);
+        shoppingCart.setUser(user);
+        shoppingCartRepository.save(shoppingCart);
         return userMapper.toResponseDto(user);
     }
 
@@ -113,7 +119,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete(Long id) {
+        if (userRepository.findByIdWithoutRole(id).isEmpty()) {
+            return;
+        }
         userRepository.deleteById(id);
+        shoppingCartRepository.deleteById(id);
+        sendMessage(TELEGRAM, USER_DELETING, null, new User(id));
     }
 
     private boolean userIs(User user, Role.RoleName roleName) {

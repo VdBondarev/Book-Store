@@ -15,6 +15,7 @@ public class TelegramBotConfig {
         TelegramBotsApi api =
                 new TelegramBotsApi(DefaultBotSession.class);
         api.registerBot(telegramBot);
+        telegramBot.removeWebhook();
         return api;
     }
 }
