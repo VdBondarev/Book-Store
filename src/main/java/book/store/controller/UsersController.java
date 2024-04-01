@@ -32,8 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsersController {
     private final UserService userService;
 
-    @Operation(summary = "Get your profile's info",
-            description = "Endpoint for getting your profile's info")
+    @Operation(summary = "Get your profile's info")
     @GetMapping("/mine")
     public UserResponseDto getMyInfo(Authentication authentication) {
         User user = getUser(authentication);
@@ -41,8 +40,7 @@ public class UsersController {
     }
 
     @PutMapping("/mine")
-    @Operation(summary = "Update your profile's info",
-            description = "Endpoint for updating your profile's info")
+    @Operation(summary = "Update your profile's info")
     public UserResponseDto updateMyInfo(
             Authentication authentication,
             @RequestBody @Valid UserUpdateRequestDto requestDto) {
@@ -53,8 +51,10 @@ public class UsersController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Update a user's role",
-            description = "Endpoint for updating the user's role."
-                    + " Allowed for managers only")
+            description = """
+                    Endpoint for updating the user's role.
+                    Allowed for admins only
+                    """)
     public UserAdminResponseDto changeUserRole(
             @PathVariable Long id,
             @RequestParam(name = "role_name") String roleName) {
@@ -64,7 +64,7 @@ public class UsersController {
     @GetMapping("/search")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Find users",
-            description = "Endpoint for finding users by params. Allowed for managers only")
+            description = "Endpoint for finding users by params. Allowed for admins only")
     public List<UserAdminResponseDto> search(
             @RequestBody UserSearchParametersDto parametersDto,
             Pageable pageable) {
@@ -74,7 +74,7 @@ public class UsersController {
     @GetMapping
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Get all users",
-            description = "Endpoint for getting all users. Allowed for managers only")
+            description = "Endpoint for getting all users. Allowed for admins only")
     public List<UserAdminResponseDto> getAll(Pageable pageable) {
         return userService.getAll(pageable);
     }
@@ -82,7 +82,7 @@ public class UsersController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Delete a user",
-            description = "Endpoint for deleting a user")
+            description = "Endpoint for deleting a user. Allowed for admins only")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         userService.delete(id);

@@ -30,15 +30,13 @@ public class CategoriesController {
     private final CategoryService categoryService;
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get a category by id",
-            description = "Endpoint for getting a category by id")
+    @Operation(summary = "Get a category by id")
     public CategoryResponseDto getCategoryById(@PathVariable Long id) {
         return categoryService.getCategoryById(id);
     }
 
     @GetMapping
-    @Operation(summary = "Get all categories",
-            description = "Endpoint for getting a list of all categories with pageable sorting")
+    @Operation(summary = "Get all categories with pageable sorting")
     public List<CategoryResponseDto> getAll(Pageable pageable) {
         return categoryService.getAll(pageable);
     }
