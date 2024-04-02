@@ -7,7 +7,7 @@ public record CreateCartItemRequestDto(
         @NotNull
         Long bookId,
         @NotNull
-        @Min(0)
+        @Min(1)
         int quantity
 ) {
 }

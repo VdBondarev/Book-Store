@@ -64,6 +64,12 @@ public class ShoppingCartsController {
         return shoppingCartService.updateAnItem(getUser(authentication), bookId, quantity);
     }
 
+    @PutMapping("/clear")
+    @Operation(summary = "Clear the whole shopping cart")
+    public ShoppingCartResponseDto clear(Authentication authentication) {
+        return shoppingCartService.clear(getUser(authentication));
+    }
+
     @DeleteMapping
     @Operation(summary = "Delete a book from your shopping cart")
     public ShoppingCartResponseDto deleteBook(

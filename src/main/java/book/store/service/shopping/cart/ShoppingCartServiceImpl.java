@@ -14,6 +14,7 @@ import book.store.repository.CartItemRepository;
 import book.store.repository.ShoppingCartRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -104,6 +105,20 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         shoppingCart.setCartItems(cartItems);
         shoppingCartRepository.save(shoppingCart);
         return withMappedCartItems(shoppingCart);
+    }
+
+    @Override
+    public ShoppingCartResponseDto clear(User user) {
+        ShoppingCart shoppingCart = getShoppingCart(user.getId());
+        shoppingCart.getCartItems()
+                .forEach(item -> cartItemRepository
+                        .deleteById(item.getId())
+                );
+        shoppingCart.setCartItems(new HashSet<>());
+        shoppingCartRepository.save(shoppingCart);
+        ShoppingCartResponseDto responseDto = shoppingCartMapper.toResponseDto(shoppingCart);
+        responseDto.setCartItems(new HashSet<>());
+        return responseDto;
     }
 
     private CartItem findByBookId(ShoppingCart shoppingCart, Long bookId) {
