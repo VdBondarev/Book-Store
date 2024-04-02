@@ -3,7 +3,7 @@ package book.store.telegram.strategy.response.impl;
 import book.store.model.Category;
 import book.store.repository.CategoryRepository;
 import book.store.telegram.strategy.response.AdminResponseService;
-import jakarta.persistence.EntityNotFoundException;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +17,11 @@ public class AdminGetCategoryResponseService implements AdminResponseService {
     @Override
     public String getMessage(String text) {
         Long id = getId(text);
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "There is no category by id " + id));
+        Optional<Category> categoryOptional = categoryRepository.findById(id);
+        if (categoryOptional.isEmpty()) {
+            return "There is no category by id " + id;
+        }
+        Category category = categoryOptional.get();
         String message = """               
                 ***
                 Found this category.

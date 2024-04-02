@@ -12,6 +12,7 @@ import book.store.model.User;
 import book.store.repository.OrderItemRepository;
 import book.store.repository.OrderRepository;
 import book.store.repository.ShoppingCartRepository;
+import book.store.telegram.strategy.notification.AdminNotificationService;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,11 +28,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
+    private static final String ORDER_STATUS_UPDATING = "Order status updating";
+    private static final String TELEGRAM = "Telegram";
     private final OrderRepository orderRepository;
     private final ShoppingCartRepository shoppingCartRepository;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final OrderItemRepository orderItemRepository;
+    private final List<AdminNotificationService<Order>> notificationServices;
 
     @Override
     @Transactional
@@ -96,6 +100,13 @@ public class OrderServiceImpl implements OrderService {
                         "Can't find an order by id " + id));
         order.setStatus(toSet);
         orderRepository.save(order);
+        notificationServices
+                .stream()
+                .filter(service -> service.isApplicable(TELEGRAM, ORDER_STATUS_UPDATING))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Can't find a notification service"))
+                .sendMessage(null, order);
     }
 
     private void checkIfOrderExists(User user, Order.Status status) {

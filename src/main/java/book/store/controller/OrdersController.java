@@ -97,7 +97,7 @@ public class OrdersController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Update status of a pointed order")
-    public void changeStatus(
+    public void updateStatus(
             @PathVariable Long id,
             @RequestParam String status) {
         orderService.updateStatus(id, status);
