@@ -36,6 +36,12 @@ public class AdminGetOrderResponseService implements AdminResponseService {
                 Status: %s,
                 Shipping address: %s,
                 Order items ids: %s.
+                
+                To get info about order items send me a message like that:
+                
+                Get info about an order item with id: ...
+                
+                And instead of ... put an actual id.
                 ***
                 """;
         Set<Long> orderItemIds = order.getOrderItems()

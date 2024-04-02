@@ -1,6 +1,7 @@
 package book.store.repository;
 
 import book.store.model.Order;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
@@ -23,4 +24,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             + "LEFT JOIN FETCH order.orderItems "
             + "WHERE order.id = :id")
     Optional<Order> findByIdWithOrderItems(Long id);
+
+    @Query("FROM Order order "
+            + "WHERE order.status = :status AND order.orderDate < :now")
+    List<Order> findAllByStatusAndOrderDate(Order.Status status, LocalDate now);
 }

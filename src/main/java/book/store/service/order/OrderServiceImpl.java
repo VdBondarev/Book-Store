@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -107,6 +108,16 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Can't find a notification service"))
                 .sendMessage(null, order);
+    }
+
+    @Scheduled(cron = "0 0 1 * * *")
+    @Transactional
+    protected void markOverdueOrdersAsCanceled() {
+        List<Order> overDueOrders =
+                orderRepository.findAllByStatusAndOrderDate(
+                        Order.Status.PENDING, LocalDate.now());
+        overDueOrders.forEach(order -> order.setStatus(Order.Status.CANCELED));
+        orderRepository.deleteAll(overDueOrders);
     }
 
     private void checkIfOrderExists(User user, Order.Status status) {
