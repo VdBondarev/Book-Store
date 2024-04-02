@@ -9,7 +9,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(config = MapperConfig.class)
 public interface OrderItemMapper {
-    @Mapping(target = "orderId", source = "order.id")
     OrderItemResponseDto toResponseDto(OrderItem orderItem);
 
     @Mapping(target = "id", ignore = true)

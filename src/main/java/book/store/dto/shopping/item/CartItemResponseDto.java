@@ -1,5 +1,6 @@
 package book.store.dto.shopping.item;
 
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,7 +8,7 @@ import lombok.Setter;
 @Setter
 public class CartItemResponseDto {
     private Long id;
-    private Long shoppingCartId;
     private Long bookId;
     private int quantity;
+    private BigDecimal price;
 }

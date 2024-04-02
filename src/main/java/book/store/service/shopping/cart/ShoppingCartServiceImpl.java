@@ -33,20 +33,22 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
     @Override
     public ShoppingCartResponseDto getMyShoppingCart(User user) {
-        return getResponseShoppingCart(user.getId());
+        ShoppingCart shoppingCart = getShoppingCartWithBooks(user.getId());
+        return withMappedCartItems(shoppingCart);
     }
 
     @Override
     public ShoppingCartResponseDto getUserShoppingCart(Long id) {
-        return getResponseShoppingCart(id);
+        ShoppingCart shoppingCart = getShoppingCartWithBooks(id);
+        return withMappedCartItems(shoppingCart);
     }
 
     @Override
     @Transactional
     public ShoppingCartResponseDto addCartItem(User user, CreateCartItemRequestDto requestDto) {
-        if (bookRepository.findByIdWithoutCategories(requestDto.bookId()).isEmpty()) {
-            throw new IllegalArgumentException("There is no book by id " + requestDto.bookId());
-        }
+        Book book = bookRepository.findByIdWithoutCategories(requestDto.bookId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Can't find a book by id " + requestDto.bookId()));
         ShoppingCart shoppingCart = getShoppingCart(user.getId());
         Optional<CartItem> sameItem = shoppingCart.getCartItems()
                 .stream()
@@ -57,7 +59,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             cartItemRepository.save(sameItem.get());
         } else {
             CartItem cartItem = cartItemMapper.toModel(requestDto);
-            cartItem.setBook(new Book(requestDto.bookId()));
+            cartItem.setBook(book);
             shoppingCart.getCartItems().add(cartItem);
             cartItem.setShoppingCart(shoppingCart);
             cartItemRepository.save(cartItem);
@@ -110,10 +112,6 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Override
     public ShoppingCartResponseDto clear(User user) {
         ShoppingCart shoppingCart = getShoppingCart(user.getId());
-        shoppingCart.getCartItems()
-                .forEach(item -> cartItemRepository
-                        .deleteById(item.getId())
-                );
         shoppingCart.setCartItems(new HashSet<>());
         shoppingCartRepository.save(shoppingCart);
         ShoppingCartResponseDto responseDto = shoppingCartMapper.toResponseDto(shoppingCart);
@@ -133,15 +131,16 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
                                         + " in the shopping cart"));
     }
 
-    private ShoppingCartResponseDto getResponseShoppingCart(Long id) {
-        ShoppingCart shoppingCart = getShoppingCart(id);
-        return withMappedCartItems(shoppingCart);
-    }
-
     private ShoppingCartResponseDto withMappedCartItems(ShoppingCart shoppingCart) {
         Set<CartItemResponseDto> cartItems = shoppingCart.getCartItems()
                 .stream()
-                .map(cartItemMapper::toResponseDto)
+                .map(item -> {
+                    CartItemResponseDto responseDto = cartItemMapper.toResponseDto(item);
+                    responseDto.setPrice(
+                            item.getBook().getPrice().multiply(
+                                    BigDecimal.valueOf(item.getQuantity())));
+                    return responseDto;
+                })
                 .collect(Collectors.toSet());
         ShoppingCartResponseDto responseDto =
                 shoppingCartMapper.toResponseDto(shoppingCart);

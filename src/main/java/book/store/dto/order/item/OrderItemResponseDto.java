@@ -8,9 +8,7 @@ import lombok.Setter;
 @Setter
 public class OrderItemResponseDto {
     private Long id;
-    private Long orderId;
     private Long bookId;
     private int quantity;
-    private Long userId;
     private BigDecimal price;
 }
