@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-order_orderItem-table
+      author: VdBondarev
+      changes:
+        - createTable:
+            tableName: orders_items
+            columns:
+              - column:
+                  name: order_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_order_id
+              - column:
+                  name: item_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_item_id
+      rollback:
+        - dropTable:
+            tableName: orders_items

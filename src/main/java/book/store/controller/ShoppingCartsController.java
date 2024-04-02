@@ -7,6 +7,7 @@ import book.store.service.shopping.cart.ShoppingCartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -60,8 +61,14 @@ public class ShoppingCartsController {
     public ShoppingCartResponseDto updateBookQuantity(
             Authentication authentication,
             @RequestParam(name = "book_id") Long bookId,
-            @RequestParam int quantity) {
+            @RequestParam @Min(1) int quantity) {
         return shoppingCartService.updateAnItem(getUser(authentication), bookId, quantity);
+    }
+
+    @PutMapping("/clear")
+    @Operation(summary = "Clear the whole shopping cart")
+    public ShoppingCartResponseDto clear(Authentication authentication) {
+        return shoppingCartService.clear(getUser(authentication));
     }
 
     @DeleteMapping

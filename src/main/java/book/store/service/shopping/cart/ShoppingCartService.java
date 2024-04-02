@@ -16,4 +16,6 @@ public interface ShoppingCartService {
     ShoppingCartResponseDto updateAnItem(User user, Long bookId, int quantity);
 
     ShoppingCartResponseDto deleteBook(User user, Long bookId);
+
+    ShoppingCartResponseDto clear(User user);
 }

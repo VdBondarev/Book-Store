@@ -10,7 +10,6 @@ import org.mapstruct.Mapping;
 @Mapper(config = MapperConfig.class)
 public interface CartItemMapper {
     @Mapping(target = "bookId", source = "book.id")
-    @Mapping(target = "shoppingCartId", source = "shoppingCart.userId")
     CartItemResponseDto toResponseDto(CartItem cartItem);
 
     CartItem toModel(CreateCartItemRequestDto requestDto);
