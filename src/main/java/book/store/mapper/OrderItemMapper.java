@@ -1,6 +1,7 @@
 package book.store.mapper;
 
 import book.store.config.MapperConfig;
+import book.store.dto.order.item.CreateOrderItemRequestDto;
 import book.store.dto.order.item.OrderItemResponseDto;
 import book.store.model.CartItem;
 import book.store.model.OrderItem;
@@ -14,4 +15,6 @@ public interface OrderItemMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "bookId", source = "book.id")
     OrderItem toOrderItem(CartItem cartItem);
+
+    OrderItem toOrderItem(CreateOrderItemRequestDto requestDto);
 }
