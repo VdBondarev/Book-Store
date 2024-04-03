@@ -2,15 +2,18 @@ package book.store.service.order;
 
 import book.store.dto.order.OrderResponseDto;
 import book.store.dto.order.OrderWithoutOrderItemsResponseDto;
+import book.store.dto.order.item.CreateOrderItemRequestDto;
 import book.store.dto.order.item.OrderItemResponseDto;
 import book.store.mapper.OrderItemMapper;
 import book.store.mapper.OrderMapper;
 import book.store.model.Order;
 import book.store.model.OrderItem;
+import book.store.model.Payment;
 import book.store.model.ShoppingCart;
 import book.store.model.User;
 import book.store.repository.OrderItemRepository;
 import book.store.repository.OrderRepository;
+import book.store.repository.PaymentRepository;
 import book.store.repository.ShoppingCartRepository;
 import book.store.telegram.strategy.notification.AdminNotificationService;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +21,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemMapper orderItemMapper;
     private final OrderItemRepository orderItemRepository;
     private final List<AdminNotificationService<Order>> notificationServices;
+    private final PaymentRepository paymentRepository;
 
     @Override
     @Transactional
@@ -62,11 +67,21 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void cancel(User user) {
         Order order = orderRepository.findByUserIdAndStatus(
                 user.getId(), Order.Status.PENDING)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Can't find an order to cancel"));
+        Optional<Payment> paymentOptional =
+                paymentRepository.findByUserIdAndStatus(
+                        user.getId(), Payment.Status.PENDING);
+        if (paymentOptional.isPresent()) {
+            Payment payment = paymentOptional.get();
+            payment.setStatus(Payment.Status.CANCELED);
+            payment.setDeleted(true);
+            paymentRepository.save(payment);
+        }
         order.setStatus(Order.Status.CANCELED);
         order.setDeleted(true);
         orderRepository.save(order);
@@ -108,6 +123,24 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Can't find a notification service"))
                 .sendMessage(null, order);
+    }
+
+    @Override
+    public OrderResponseDto add(User user, CreateOrderItemRequestDto requestDto) {
+        if (paymentRepository.findByUserIdAndStatus(
+                user.getId(), Payment.Status.PENDING)
+                .isPresent()) {
+            throw new IllegalArgumentException("""
+                    Can't add a new book to an order, because a pending payment exists.
+                    User should pay for that first or cancel it
+                    """);
+        }
+        Order order = orderRepository.findByUserIdAndStatus(
+                user.getId(), Order.Status.PENDING)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Can't find a pending order to add new book"));
+        orderItemMapper.toOrderItem(requestDto);
+        return null;
     }
 
     @Scheduled(cron = "0 0 1 * * *")

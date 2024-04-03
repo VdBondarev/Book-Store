@@ -2,6 +2,7 @@ package book.store.controller;
 
 import book.store.dto.order.OrderResponseDto;
 import book.store.dto.order.OrderWithoutOrderItemsResponseDto;
+import book.store.dto.order.item.CreateOrderItemRequestDto;
 import book.store.model.User;
 import book.store.service.order.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,6 +53,12 @@ public class OrdersController {
             Authentication authentication,
             @RequestParam(name = "shipping_address") String shippingAddress) {
         return orderService.placeOrder(getUser(authentication), shippingAddress);
+    }
+
+    @PutMapping("/add")
+    public OrderResponseDto addBookToOrder(Authentication authentication,
+                                           CreateOrderItemRequestDto requestDto) {
+        return orderService.add(getUser(authentication), requestDto);
     }
 
     @PutMapping("/cancel")
