@@ -9,7 +9,7 @@ import book.store.model.Book;
 import book.store.repository.BookRepository;
 import book.store.repository.CategoryRepository;
 import book.store.repository.specification.book.BookSpecificationBuilder;
-import book.store.telegram.strategy.notification.AdminNotificationService;
+import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +29,7 @@ public class BookServiceImpl implements BookService {
     private final BookMapper bookMapper;
     private final CategoryRepository categoryRepository;
     private final BookSpecificationBuilder bookSpecificationBuilder;
-    private final List<AdminNotificationService<Book>> notificationServices;
+    private final AdminNotificationStrategy<Book> notificationStrategy;
 
     @Override
     public BookResponseDto create(BookCreateRequestDto requestDto) {
@@ -102,12 +102,11 @@ public class BookServiceImpl implements BookService {
             String messageType,
             Long chatId,
             Book book) {
-        notificationServices
-                .stream()
-                .filter(service -> service.isApplicable(notificationService, messageType))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(
-                        "Can't find a notification service for " + messageType))
-                .sendMessage(chatId, book);
+        notificationStrategy
+                .getNotificationService(
+                        notificationService, messageType
+                )
+                .sendMessage(
+                        chatId, book);
     }
 }

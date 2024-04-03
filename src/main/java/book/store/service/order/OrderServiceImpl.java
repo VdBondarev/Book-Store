@@ -17,7 +17,7 @@ import book.store.repository.OrderItemRepository;
 import book.store.repository.OrderRepository;
 import book.store.repository.PaymentRepository;
 import book.store.repository.ShoppingCartRepository;
-import book.store.telegram.strategy.notification.AdminNotificationService;
+import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -42,7 +42,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final OrderItemRepository orderItemRepository;
-    private final List<AdminNotificationService<Order>> notificationServices;
+    private final AdminNotificationStrategy<Order> notificationStrategy;
     private final PaymentRepository paymentRepository;
     private final BookRepository bookRepository;
 
@@ -119,13 +119,7 @@ public class OrderServiceImpl implements OrderService {
                         "Can't find an order by id " + id));
         order.setStatus(toSet);
         orderRepository.save(order);
-        notificationServices
-                .stream()
-                .filter(service -> service.isApplicable(TELEGRAM, ORDER_STATUS_UPDATING))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Can't find a notification service"))
-                .sendMessage(null, order);
+        sendMessage(TELEGRAM, ORDER_STATUS_UPDATING, null, order);
     }
 
     @Override
@@ -301,5 +295,18 @@ public class OrderServiceImpl implements OrderService {
                         status, userId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Can't find a pending order"));
+    }
+
+    private void sendMessage(
+            String notificationService,
+            String messageType,
+            Long chatId,
+            Order order) {
+        notificationStrategy
+                .getNotificationService(
+                        notificationService, messageType
+                )
+                .sendMessage(
+                        chatId, order);
     }
 }

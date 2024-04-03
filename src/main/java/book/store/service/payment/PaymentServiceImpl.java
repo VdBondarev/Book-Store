@@ -7,6 +7,7 @@ import book.store.model.Payment;
 import book.store.model.User;
 import book.store.repository.OrderRepository;
 import book.store.repository.PaymentRepository;
+import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import book.store.util.StripeUtil;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -15,14 +16,20 @@ import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+    public static final String TELEGRAM = "Telegram";
+    public static final String SUCCESSFUL_PAYMENT = "Successful payment";
+    private final AdminNotificationStrategy<Payment> notificationStrategy;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final PaymentMapper paymentMapper;
@@ -94,7 +101,16 @@ public class PaymentServiceImpl implements PaymentService {
         order.setStatus(Order.Status.PAID);
         paymentRepository.save(payment);
         orderRepository.save(order);
+        sendMessage(TELEGRAM, SUCCESSFUL_PAYMENT, null, payment);
         return paymentMapper.toResponseDto(payment);
+    }
+
+    @Override
+    public List<PaymentResponseDto> getUserPayments(Long userId, Pageable pageable) {
+        return paymentRepository.findAllByUserId(userId, pageable)
+                .stream()
+                .map(paymentMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
 
     private Payment getPayment(Long userId, Payment.Status status) {
@@ -103,5 +119,18 @@ public class PaymentServiceImpl implements PaymentService {
                         "Can't find a "
                                 + status.name()
                                 + " payment for user with id " + userId));
+    }
+
+    private void sendMessage(
+            String notificationService,
+            String messageType,
+            Long chatId,
+            Payment payment) {
+        notificationStrategy
+                .getNotificationService(
+                        notificationService, messageType
+                )
+                .sendMessage(
+                        chatId, payment);
     }
 }

@@ -6,7 +6,7 @@ import book.store.dto.category.CreateCategoryRequestDto;
 import book.store.mapper.CategoryMapper;
 import book.store.model.Category;
 import book.store.repository.CategoryRepository;
-import book.store.telegram.strategy.notification.AdminNotificationService;
+import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,7 +23,7 @@ public class CategoryServiceImpl implements CategoryService {
     private static final String CATEGORY_DELETING = "Category deleting";
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-    private final List<AdminNotificationService<Category>> notificationServices;
+    private final AdminNotificationStrategy<Category> notificationStrategy;
 
     @Override
     public CategoryResponseDto create(CreateCategoryRequestDto requestDto) {
@@ -73,13 +73,12 @@ public class CategoryServiceImpl implements CategoryService {
             String notificationService,
             String messageType,
             Long chatId,
-            Category book) {
-        notificationServices
-                .stream()
-                .filter(service -> service.isApplicable(notificationService, messageType))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(
-                        "Can't find a notification service for " + messageType))
-                .sendMessage(chatId, book);
+            Category category) {
+        notificationStrategy
+                .getNotificationService(
+                        notificationService, messageType
+                )
+                .sendMessage(
+                        chatId, category);
     }
 }

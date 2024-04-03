@@ -21,6 +21,7 @@ public class HelpCommandResponseService implements AdminResponseService {
                 3). A category
                 4). An order
                 5). An order item
+                6). A payment
                 
                 Send me a message with the following format:
                 
@@ -29,6 +30,7 @@ public class HelpCommandResponseService implements AdminResponseService {
                 Get info about a category with id: ...
                 Get info about an order with id: ...
                 Get info about an order item with id: ...
+                Get info about a payment with id: ...
                 
                 Instead of ... paste id.
                 ***
