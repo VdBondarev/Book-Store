@@ -49,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findByUserIdAndStatus(
                 user.getId(), Order.Status.PENDING)
                 .orElseThrow(() -> new EntityNotFoundException("""
-                        User have not created an order yet.
+                        User has not created an order yet.
                         User should have a pending order to create a payment.
                         """));
         Session session = stripeUtil.createSession(

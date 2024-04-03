@@ -19,4 +19,8 @@ public interface OrderService {
     void updateStatus(Long id, String status);
 
     OrderResponseDto add(User user, CreateOrderItemRequestDto requestDto);
+
+    OrderResponseDto removeBookFromOrder(User user, Long bookId);
+
+    OrderResponseDto getPending(User user);
 }

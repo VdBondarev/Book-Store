@@ -7,6 +7,7 @@ import book.store.model.User;
 import book.store.service.order.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,9 +58,44 @@ public class OrdersController {
     }
 
     @PutMapping("/add")
-    public OrderResponseDto addBookToOrder(Authentication authentication,
-                                           CreateOrderItemRequestDto requestDto) {
+    @Operation(summary = "Add a book to a pending order",
+            description = """                    
+                    User should have a pending order and no pending payment.
+                    
+                    If a book already exists in the order, it will just update the quantity.
+                    
+                    If not - then this book will be added to the order.
+                    
+                    After any of these operations, the total price will be re-calculated.
+                    """)
+    public OrderResponseDto addBookToOrder(
+            Authentication authentication,
+            @RequestBody @Valid CreateOrderItemRequestDto requestDto) {
         return orderService.add(getUser(authentication), requestDto);
+    }
+
+    @PutMapping("/remove")
+    @Operation(summary = "Remove a book from a pending order",
+            description = """
+                    User should have a pending order and no pending payment.
+                    
+                    This endpoint removes a book from the order completely.
+                    
+                    If it is the only book,
+                    then user can not remove it (should cancel it)
+                    
+                    After removing a book, the total price will be re-calculated
+                    """)
+    public OrderResponseDto removeBookFromOrder(
+            Authentication authentication,
+            @RequestParam(name = "book_id") Long bookId) {
+        return orderService.removeBookFromOrder(getUser(authentication), bookId);
+    }
+
+    @GetMapping("/pending")
+    @Operation(summary = "Get a pending order")
+    public OrderResponseDto getPending(Authentication authentication) {
+        return orderService.getPending(getUser(authentication));
     }
 
     @PutMapping("/cancel")
