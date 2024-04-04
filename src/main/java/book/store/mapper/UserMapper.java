@@ -24,6 +24,7 @@ public interface UserMapper {
     @Mapping(target = "password", ignore = true)
     User toModel(UserRegistrationRequestDto requestDto);
 
+    @Mapping(target = "password", ignore = true)
     void toModel(@MappingTarget User user, UserUpdateRequestDto requestDto);
 
     @AfterMapping
