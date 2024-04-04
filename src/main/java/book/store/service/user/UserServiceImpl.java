@@ -101,6 +101,10 @@ public class UserServiceImpl implements UserService {
                     Try another one.
                     """);
         }
+        if (requestDto.password() != null) {
+            String passwordEncoded = passwordEncoder.encode(requestDto.password());
+            user.setPassword(passwordEncoded);
+        }
         userMapper.toModel(user, requestDto);
         userRepository.save(user);
         return userMapper.toResponseDto(user);
