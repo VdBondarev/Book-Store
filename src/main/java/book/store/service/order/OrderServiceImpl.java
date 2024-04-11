@@ -190,7 +190,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Scheduled(cron = "0 0 1 * * *")
     @Transactional
-    protected void markOverdueOrdersAsCanceled() {
+    public void markOverdueOrdersAsCanceled() {
         List<Order> overDueOrders =
                 orderRepository.findAllByStatusAndOrderDate(
                         Order.Status.PENDING, LocalDate.now());
