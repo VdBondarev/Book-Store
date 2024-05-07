@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import book.store.dto.book.BookResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,10 +49,10 @@ class BooksControllerTest {
             },
             executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     @DisplayName("""
-            Verify that findAll() method works as expected with valid pageable
+            Verify that getAll() method works as expected with valid pageable
             """)
     @Test
-    public void findAll_ValidRequest_ReturnsRequiredBooks() throws Exception {
+    public void getAll_ValidRequest_ReturnsRequiredBooks() throws Exception {
         Pageable pageable = PageRequest.of(0, 5);
 
         String content = objectMapper.writeValueAsString(pageable);
@@ -69,11 +71,8 @@ class BooksControllerTest {
         assertEquals(5, actual.length);
     }
 
-    @DisplayName("""
-            Verify that findAll() method works as expected with non-valid pageable
-            """)
     @Test
-    public void findAll_NonValidPageable_ReturnsEmptyList() throws Exception {
+    public void getAll_NonValidPageable_ReturnsEmptyList() throws Exception {
         Pageable pageable = PageRequest.of(15, 5);
 
         String content = objectMapper.writeValueAsString(pageable);
@@ -90,5 +89,45 @@ class BooksControllerTest {
         );
 
         assertEquals(0, actual.length);
+    }
+
+    @Sql(scripts =
+            {
+                    INSERT_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @DisplayName("""
+            Verify that getById() method works as expected with valid id
+            """)
+    @Test
+    public void getById_ValidId_ReturnsValidBook() throws Exception {
+        Long id = 1L;
+
+        MvcResult result = mockMvc.perform(get("/books/" + id))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        BookResponseDto actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), BookResponseDto.class
+        );
+
+        BookResponseDto expected = new BookResponseDto()
+                .setId(1L)
+                .setAuthor("Harper Lee")
+                .setIsbn("9780061120084")
+                .setPrice(BigDecimal.valueOf(10.99))
+                .setDescription("A classic novel set in the American South during the 1930s.")
+                .setTitle("To Kill a Mockingbird")
+                .setCoverImage("to_kill_a_mockingbird.jpg")
+                .setCategoriesIds(new HashSet<>());
+
+        assertEquals(expected, actual);
+
     }
 }
