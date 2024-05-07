@@ -7,9 +7,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.store.dto.book.BookResponseDto;
+import book.store.dto.book.BookSearchParametersDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +41,7 @@ class BooksControllerTest {
 
     @Sql(scripts =
             {
-                    INSERT_BOOKS_FILE_PATH
+                    DELETE_ALL_BOOKS_FILE_PATH, INSERT_BOOKS_FILE_PATH
             },
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
@@ -72,6 +74,11 @@ class BooksControllerTest {
     }
 
     @Test
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getAll_NonValidPageable_ReturnsEmptyList() throws Exception {
         Pageable pageable = PageRequest.of(15, 5);
 
@@ -93,7 +100,7 @@ class BooksControllerTest {
 
     @Sql(scripts =
             {
-                    INSERT_BOOKS_FILE_PATH
+                    DELETE_ALL_BOOKS_FILE_PATH, INSERT_BOOKS_FILE_PATH
             },
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
     )
@@ -128,6 +135,105 @@ class BooksControllerTest {
                 .setCategoriesIds(new HashSet<>());
 
         assertEquals(expected, actual);
+    }
 
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH, INSERT_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @DisplayName("""
+            Verify that search() method works as expected with valid author
+            """)
+    @Test
+    public void search_ValidInputParams_ReturnsValidBook() throws Exception {
+        BookSearchParametersDto parametersDto = new BookSearchParametersDto(
+                null,
+                "Harper Lee",
+                null,
+                null,
+                null
+        );
+
+        String content = objectMapper.writeValueAsString(parametersDto);
+
+        MvcResult result = mockMvc.perform(get("/books/search")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        BookResponseDto[] actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), BookResponseDto[].class
+        );
+
+        BookResponseDto expected = new BookResponseDto()
+                .setId(1L)
+                .setAuthor("Harper Lee")
+                .setIsbn("9780061120084")
+                .setPrice(BigDecimal.valueOf(10.99))
+                .setDescription("A classic novel set in the American South during the 1930s.")
+                .setTitle("To Kill a Mockingbird")
+                .setCoverImage("to_kill_a_mockingbird.jpg")
+                .setCategoriesIds(new HashSet<>());
+
+        assertEquals(expected, actual[0]);
+    }
+
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH, INSERT_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @DisplayName("""
+            Verify that search() method works as expected with valid search params
+            """)
+    @Test
+    public void search_ValidRequest_ReturnsValidResponse() throws Exception {
+        BookSearchParametersDto parametersDto = new BookSearchParametersDto(
+                "bird",
+                null,
+                "novel",
+                List.of(BigDecimal.ZERO, BigDecimal.valueOf(15L)),
+                new HashSet<>()
+        );
+
+        String content = objectMapper.writeValueAsString(parametersDto);
+
+        MvcResult result = mockMvc.perform(get("/books/search")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        BookResponseDto[] actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), BookResponseDto[].class
+        );
+
+        BookResponseDto expected = new BookResponseDto()
+                .setId(1L)
+                .setAuthor("Harper Lee")
+                .setIsbn("9780061120084")
+                .setPrice(BigDecimal.valueOf(10.99))
+                .setDescription("A classic novel set in the American South during the 1930s.")
+                .setTitle("To Kill a Mockingbird")
+                .setCoverImage("to_kill_a_mockingbird.jpg")
+                .setCategoriesIds(new HashSet<>());
+
+        assertEquals(expected, actual[0]);
     }
 }
