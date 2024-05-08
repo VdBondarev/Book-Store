@@ -8,18 +8,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.store.dto.book.BookCreateRequestDto;
 import book.store.dto.book.BookResponseDto;
 import book.store.dto.book.BookSearchParametersDto;
+import book.store.dto.book.BookUpdateDto;
 import book.store.model.Book;
 import book.store.model.Role;
 import book.store.model.User;
 import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import book.store.telegram.strategy.notification.book.BookCreationNotificationService;
+import book.store.telegram.strategy.notification.book.BookDeletingNotificationService;
+import book.store.telegram.strategy.notification.book.BookUpdatingNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.HashSet;
@@ -333,6 +338,102 @@ class BooksControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
         )
                 .andExpect(status().isBadRequest());
+    }
+
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH,
+                    DELETE_ALL_CATEGORIES_FILE_PATH,
+                    INSERT_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that updateById() endpoint works as expected with a valid request
+            """)
+    @WithMockUser(username = "admin@example.com", authorities = {"ROLE_ADMIN"})
+    @Test
+    public void updateById_ValidRequest_Success() throws Exception {
+        // updating a title only
+        BookUpdateDto updateDto = new BookUpdateDto(
+                "New title",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        Long id = 1L;
+
+        String content = objectMapper.writeValueAsString(updateDto);
+
+        when(notificationStrategy.getNotificationService(
+                anyString(), anyString())
+        )
+                .thenReturn(mock(BookUpdatingNotificationService.class));
+
+        MvcResult result = mockMvc.perform(put("/books/" + id)
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        BookResponseDto actualResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(), BookResponseDto.class
+        );
+
+        assertEquals(updateDto.title(), actualResponse.getTitle());
+    }
+
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH,
+                    DELETE_ALL_CATEGORIES_FILE_PATH,
+                    INSERT_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that deleteById() endpoint works as expected with a valid request
+            """)
+    @WithMockUser(username = "admin@example.com", authorities = {"ROLE_ADMIN"})
+    @Test
+    public void deleteById_ValidRequest_Success() throws Exception {
+        Long id = 1L;
+
+        when(notificationStrategy.getNotificationService(
+                anyString(), anyString())
+        )
+                .thenReturn(mock(BookDeletingNotificationService.class));
+        // deleting a book
+        mockMvc.perform(delete("/books/" + id))
+                .andExpect(status().isNoContent());
+
+        MvcResult result = mockMvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        BookResponseDto[] response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), BookResponseDto[].class
+        );
+
+        // expecting that after deleting one book there will be 4 left
+        assertEquals(4, response.length);
     }
 
     private BookResponseDto fromRequestDto(Long id, BookCreateRequestDto requestDto) {
