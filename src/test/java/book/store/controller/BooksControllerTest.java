@@ -1,25 +1,40 @@
 package book.store.controller;
 
 import static book.store.holder.LinksHolder.DELETE_ALL_BOOKS_FILE_PATH;
+import static book.store.holder.LinksHolder.DELETE_ALL_CATEGORIES_FILE_PATH;
 import static book.store.holder.LinksHolder.INSERT_BOOKS_FILE_PATH;
+import static book.store.holder.LinksHolder.INSERT_CATEGORY_FILE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import book.store.dto.book.BookCreateRequestDto;
 import book.store.dto.book.BookResponseDto;
 import book.store.dto.book.BookSearchParametersDto;
+import book.store.model.Book;
+import book.store.model.Role;
+import book.store.model.User;
+import book.store.telegram.strategy.notification.AdminNotificationStrategy;
+import book.store.telegram.strategy.notification.book.BookCreationNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -31,6 +46,8 @@ class BooksControllerTest {
     protected static MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
+    @MockBean
+    private AdminNotificationStrategy<Book> notificationStrategy;
 
     @BeforeAll
     static void beforeAll(@Autowired WebApplicationContext applicationContext) {
@@ -235,5 +252,99 @@ class BooksControllerTest {
                 .setCategoriesIds(new HashSet<>());
 
         assertEquals(expected, actual[0]);
+    }
+
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH,
+                    DELETE_ALL_CATEGORIES_FILE_PATH,
+                    INSERT_CATEGORY_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(scripts =
+            {
+                    DELETE_ALL_BOOKS_FILE_PATH,
+                    DELETE_ALL_CATEGORIES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    @DisplayName("""
+            Verify that create() method works as expected with a valid request
+            """)
+    @Test
+    @WithMockUser(username = "admin@example.com", authorities = {"ROLE_ADMIN"})
+    public void create_ValidRequest_Success() throws Exception {
+        BookCreateRequestDto requestDto = new BookCreateRequestDto(
+                "To Kill a Mockingbird",
+                "Harper Lee",
+                "9780061120084",
+                BigDecimal.valueOf(10.99),
+                "A classic novel set in the American South during the 1930s.",
+                "to_kill_a_mockingbird.jpg",
+                Set.of(1L)
+        );
+
+        String content = objectMapper.writeValueAsString(requestDto);
+
+        User user = new User();
+        user.setRoles(Set.of(new Role(2L)));
+
+        when(notificationStrategy.getNotificationService(
+                anyString(), anyString())
+        )
+                .thenReturn(mock(BookCreationNotificationService.class));
+
+        MvcResult result = mockMvc.perform(post("/books")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        BookResponseDto actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), BookResponseDto.class
+        );
+
+        BookResponseDto expected = fromRequestDto(1L, requestDto);
+
+        assertEquals(expected, actual);
+    }
+
+    @DisplayName("""
+            Verify that create() endpoint works as expected with a non-valid request
+            """)
+    @Test
+    @WithMockUser(username = "admin@example.com", authorities = {"ROLE_ADMIN"})
+    public void create_NonValidRequest_Failure() throws Exception {
+        BookCreateRequestDto requestDto = new BookCreateRequestDto(
+                "non-valid",
+                "non-valid",
+                "non-valid",
+                BigDecimal.ZERO,
+                "desc",
+                "cov",
+                new HashSet<>()
+        );
+
+        String content = objectMapper.writeValueAsString(requestDto);
+
+        mockMvc.perform(post("/books")
+                .content(content)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(status().isBadRequest());
+    }
+
+    private BookResponseDto fromRequestDto(Long id, BookCreateRequestDto requestDto) {
+        return new BookResponseDto()
+                .setIsbn(requestDto.isbn())
+                .setPrice(requestDto.price())
+                .setAuthor(requestDto.author())
+                .setTitle(requestDto.title())
+                .setId(id)
+                .setDescription(requestDto.description())
+                .setCoverImage(requestDto.coverImage())
+                .setCategoriesIds(requestDto.categoriesIds()
+                );
     }
 }
