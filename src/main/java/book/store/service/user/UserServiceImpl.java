@@ -97,8 +97,9 @@ public class UserServiceImpl implements UserService {
         if (requestDto.email() != null
                 && userRepository.findByEmail(requestDto.email()).isPresent()) {
             throw new IllegalArgumentException("""
-                    Can't update email. This one is already taken.
-                    Try another one.
+                    Can't update email
+                    This one is already taken
+                    Try another one
                     """);
         }
         if (requestDto.password() != null) {

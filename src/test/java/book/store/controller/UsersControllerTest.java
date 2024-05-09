@@ -6,9 +6,11 @@ import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.Http
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.store.dto.user.UserResponseDto;
+import book.store.dto.user.UserUpdateRequestDto;
 import book.store.security.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,15 +30,16 @@ import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UsersControllerTest {
+    protected static MockMvc mockMvc;
     private static final String BEARER = "Bearer";
     private static final String EMPTY = " ";
-    protected static MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
     private AuthenticationManager authenticationManager;
+    private final String email = "user@example.com";
 
     @BeforeAll
     static void beforeAll(@Autowired WebApplicationContext applicationContext) {
@@ -63,8 +67,6 @@ class UsersControllerTest {
             """)
     @Test
     public void getMyInfo_ValidInput_Success() throws Exception {
-        String email = "user@example.com";
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         email, "1234567890"
@@ -88,73 +90,166 @@ class UsersControllerTest {
 
         assertEquals(expected, actual);
     }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that updateMyInfo() endpoint works as expected with valid params
+            """)
+    @Test
+    public void updateMyInfo_ValidInput_Success() throws Exception {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        email, "1234567890"
+                )
+        );
+
+        String jwt = jwtUtil.generateToken(email);
+
+        UserUpdateRequestDto requestDto = new UserUpdateRequestDto(
+                "New",
+                "New",
+                "new@example.com",
+                "11111111111111"
+        );
+
+        String content = objectMapper.writeValueAsString(requestDto);
+
+        MvcResult result = mockMvc.perform(put("/users/mine")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .principal(authentication)
+                        .header(AUTHORIZATION, BEARER + EMPTY + jwt)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserResponseDto actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), UserResponseDto.class
+        );
+
+        UserResponseDto expected = new UserResponseDto(
+                1L,
+                "New",
+                "New",
+                "new@example.com"
+        );
+
+        assertEquals(expected, actual);
+    }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that updateMyInfo() endpoint works as expected with already registered email
+            """)
+    @Test
+    public void updateMyInfo_AlreadyRegisteredEmail_Failure() throws Exception {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        email, "1234567890"
+                )
+        );
+
+        String jwt = jwtUtil.generateToken(email);
+
+        UserUpdateRequestDto requestDto = new UserUpdateRequestDto(
+                "New",
+                "New",
+                // expecting that this email is already registered
+                email,
+                "11111111111111"
+        );
+
+        String content = objectMapper.writeValueAsString(requestDto);
+
+        MvcResult result = mockMvc.perform(put("/users/mine")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .principal(authentication)
+                        .header(AUTHORIZATION, BEARER + EMPTY + jwt)
+                )
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String message = result.getResolvedException().getMessage();
+
+        String expectedMessage = """
+                Can't update email
+                This one is already taken
+                Try another one
+                """;
+
+        assertEquals(expectedMessage, message);
+    }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that validation is completed properly with non-valid request dto
+            Email is not well-formed
+            First name and last name do not start with upper case
+            Password is of length less than 8 characters
+            """)
+    @Test
+    public void updateMyInfo_NonValidRequest_Failure() throws Exception {
+        UserUpdateRequestDto requestDto = new UserUpdateRequestDto(
+                "non-valid",
+                "non-valid",
+                "non-valid",
+                "short"
+        );
+
+        String content = objectMapper.writeValueAsString(requestDto);
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        email, "1234567890"
+                )
+        );
+
+        String jwt = jwtUtil.generateToken(email);
+
+        mockMvc.perform(put("/users/mine")
+                        .content(content)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .principal(authentication)
+                        .header(AUTHORIZATION, BEARER + EMPTY + jwt)
+        )
+                .andExpect(status().isBadRequest());
+    }
+
 }
-/**
- * @Tag(name = "Users controller", description = "Endpoints for managing users")
- * @RestController
- * @RequestMapping("/users")
- * @RequiredArgsConstructor
- * public class UsersController {
- *     private final UserService userService;
- *
- *     @Operation(summary = "Get your profile's info")
- *     @GetMapping("/mine")
- *     public UserResponseDto getMyInfo(Authentication authentication) {
- *         User user = getUser(authentication);
- *         return userService.getMyInfo(user);
- *     }
- *
- *     @PutMapping("/mine")
- *     @Operation(summary = "Update your profile's info")
- *     public UserResponseDto updateMyInfo(
- *             Authentication authentication,
- *             @RequestBody @Valid UserUpdateRequestDto requestDto) {
- *         User user = getUser(authentication);
- *         return userService.updateMyInfo(user, requestDto);
- *     }
- *
- *     @PutMapping("/{id}")
- *     @PreAuthorize("hasRole('ROLE_ADMIN')")
- *     @Operation(summary = "Update a user's role",
- *             description = """
- *                     Endpoint for updating the user's role.
- *                     Allowed for admins only
- *                     """)
- *     public UserAdminResponseDto changeUserRole(
- *             @PathVariable Long id,
- *             @RequestParam(name = "role_name") String roleName) {
- *         return userService.changeUserRole(id, roleName);
- *     }
- *
- *     @GetMapping("/search")
- *     @PreAuthorize("hasRole('ROLE_ADMIN')")
- *     @Operation(summary = "Find users",
- *             description = "Endpoint for finding users by params. Allowed for admins only")
- *     public List<UserAdminResponseDto> search(
- *             @RequestBody UserSearchParametersDto parametersDto,
- *             Pageable pageable) {
- *         return userService.search(parametersDto, pageable);
- *     }
- *
- *     @GetMapping
- *     @PreAuthorize("hasRole('ROLE_ADMIN')")
- *     @Operation(summary = "Get all users",
- *             description = "Endpoint for getting all users. Allowed for admins only")
- *     public List<UserAdminResponseDto> getAll(Pageable pageable) {
- *         return userService.getAll(pageable);
- *     }
- *
- *     @DeleteMapping("/{id}")
- *     @PreAuthorize("hasRole('ROLE_ADMIN')")
- *     @Operation(summary = "Delete a user",
- *             description = "Endpoint for deleting a user. Allowed for admins only")
- *     @ResponseStatus(HttpStatus.NO_CONTENT)
- *     public void delete(@PathVariable Long id) {
- *         userService.delete(id);
- *     }
- *
- *     private User getUser(Authentication authentication) {
- *         return (User) authentication.getPrincipal();
- *     }
- * }
- */
