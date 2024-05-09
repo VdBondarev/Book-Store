@@ -5,3 +5,11 @@ databaseChangeLog:
       file: db/changelog/changes/02-create-categories-table.yaml
   - include:
       file: db/changelog/changes/03-create-book_categories-table.yaml
+  - include:
+      file: db/changelog/changes/06-create-users-table.yaml
+  - include:
+      file: db/changelog/changes/07-create-roles-table.yaml
+  - include:
+      file: db/changelog/changes/08-create-user_roles-table.yaml
+  - include:
+      file: db/changelog/changes/09-create-shopping_carts-table.yaml

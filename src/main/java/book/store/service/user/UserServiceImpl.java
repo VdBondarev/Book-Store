@@ -44,9 +44,9 @@ public class UserServiceImpl implements UserService {
             throws RegistrationException {
         if (userRepository.findByEmail(requestDto.email()).isPresent()) {
             throw new RegistrationException("""
-                    Can't register a new user.
-                    Passed email already exists.
-                    Try another one.
+                    Can't register a new user
+                    Passed email already exists
+                    Try another one
                     """);
         }
         User user = userMapper.toModel(requestDto);
