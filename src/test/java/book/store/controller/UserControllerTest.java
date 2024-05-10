@@ -1,7 +1,9 @@
 package book.store.controller;
 
 import static book.store.holder.LinksHolder.DELETE_ALL_USERS_FILE_PATH;
+import static book.store.holder.LinksHolder.DELETE_ALL_USER_ROLES_FILE_PATH;
 import static book.store.holder.LinksHolder.INSERT_USER_FILE_PATH;
+import static book.store.holder.LinksHolder.INSERT_USER_TO_USER_ROLES_FILE_PATH;
 import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -40,7 +42,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class UsersControllerTest {
+class UserControllerTest {
     protected static MockMvc mockMvc;
     private static final String PASSWORD = "1234567890";
     private static final String BEARER = "Bearer";
@@ -307,6 +309,47 @@ class UsersControllerTest {
 
         // expecting that there will be no users in db
         assertEquals(0, users.length);
+    }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH,
+                    INSERT_USER_TO_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    DELETE_ALL_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that updateUserRole() endpoint works as expected
+            When updating user to user (nothing should happen)            
+            """)
+    @Test
+    @WithMockUser(username = EMAIL, password = PASSWORD, authorities = "ROLE_ADMIN")
+    public void changeUserRole_UserToUser_NothingChanges() throws Exception {
+        String roleName = "USER";
+
+        Long id = 1L;
+
+        MvcResult result = mockMvc.perform(
+                        put("/users/" + id)
+                                .param("role_name", roleName)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserAdminResponseDto userAdminResponseDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(), UserAdminResponseDto.class
+        );
+
+        // expecting that user will only have user role
+        assertEquals(1, userAdminResponseDto.getRolesIds().size());
     }
 }
 

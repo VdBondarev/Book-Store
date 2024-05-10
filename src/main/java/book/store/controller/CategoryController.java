@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/categories")
 @RequiredArgsConstructor
-public class CategoriesController {
+public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/{id}")

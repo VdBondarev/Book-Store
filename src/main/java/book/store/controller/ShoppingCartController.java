@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/shopping/carts")
-public class ShoppingCartsController {
+public class ShoppingCartController {
     private final ShoppingCartService shoppingCartService;
 
     @PostMapping
