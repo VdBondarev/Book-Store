@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import book.store.dto.user.UserAdminResponseDto;
 import book.store.dto.user.UserResponseDto;
+import book.store.dto.user.UserSearchParametersDto;
 import book.store.dto.user.UserUpdateRequestDto;
 import book.store.model.User;
 import book.store.security.JwtUtil;
@@ -26,6 +27,8 @@ import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import book.store.telegram.strategy.notification.user.RoleUpdatingNotificationService;
 import book.store.telegram.strategy.notification.user.UserDeletingNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -482,5 +485,59 @@ class UserControllerTest {
 
         // expecting that user will have user and admin roles
         assertEquals(2, userAdminResponseDto.getRolesIds().size());
+    }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH,
+                    INSERT_USER_TO_USER_ROLES_FILE_PATH
+            }, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    DELETE_ALL_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that search() endpoint works as expected
+            """)
+    @Test
+    @WithMockUser(username = EMAIL, password = PASSWORD, authorities = "ROLE_ADMIN")
+    public void search_ValidRequest_Success() throws Exception {
+        UserSearchParametersDto parametersDto = new UserSearchParametersDto(
+                List.of("user@example.com"),
+                List.of("User"),
+                List.of("User"),
+                Set.of(1L)
+        );
+
+        String content = objectMapper.writeValueAsString(parametersDto);
+
+        MvcResult result = mockMvc.perform(
+                        get("/users/search")
+                                .content(content)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserAdminResponseDto[] actualList = objectMapper.readValue(
+                result.getResponse().getContentAsString(), UserAdminResponseDto[].class
+        );
+
+        // expecting that there is one user only found
+        assertEquals(1, actualList.length);
+
+        UserAdminResponseDto expectedDto = new UserAdminResponseDto()
+                .setId(1L)
+                .setEmail("user@example.com")
+                .setFirstName("User")
+                .setLastName("User")
+                .setRolesIds(Set.of(1L));
+
+        assertEquals(expectedDto, actualList[0]);
     }
 }
