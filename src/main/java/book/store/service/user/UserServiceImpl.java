@@ -15,6 +15,7 @@ import book.store.repository.UserRepository;
 import book.store.repository.specification.SpecificationBuilder;
 import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -80,7 +81,9 @@ public class UserServiceImpl implements UserService {
         if (userIs(user, Role.RoleName.ROLE_USER) && role.equals(Role.RoleName.ROLE_ADMIN)) {
             user.getRoles().add(new Role(2L));
         } else {
-            user.setRoles(Set.of(new Role(1L)));
+            Set<Role> roles = new HashSet<>();
+            roles.add(new Role(1L));
+            user.setRoles(roles);
         }
         userRepository.save(user);
         sendMessage(TELEGRAM, USER_UPDATING, null, user);

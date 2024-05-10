@@ -2,10 +2,12 @@ package book.store.controller;
 
 import static book.store.holder.LinksHolder.DELETE_ALL_USERS_FILE_PATH;
 import static book.store.holder.LinksHolder.DELETE_ALL_USER_ROLES_FILE_PATH;
+import static book.store.holder.LinksHolder.INSERT_ADMIN_TO_USER_ROLES_FILE_PATH;
 import static book.store.holder.LinksHolder.INSERT_USER_FILE_PATH;
 import static book.store.holder.LinksHolder.INSERT_USER_TO_USER_ROLES_FILE_PATH;
 import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -21,6 +23,7 @@ import book.store.dto.user.UserUpdateRequestDto;
 import book.store.model.User;
 import book.store.security.JwtUtil;
 import book.store.telegram.strategy.notification.AdminNotificationStrategy;
+import book.store.telegram.strategy.notification.user.RoleUpdatingNotificationService;
 import book.store.telegram.strategy.notification.user.UserDeletingNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
@@ -262,7 +265,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .principal(authentication)
                         .header(AUTHORIZATION, BEARER + EMPTY + jwt)
-        )
+                )
                 .andExpect(status().isBadRequest());
     }
 
@@ -293,8 +296,8 @@ class UserControllerTest {
 
         // deleting a user
         mockMvc.perform(
-                delete("/users/" + id)
-        )
+                        delete("/users/" + id)
+                )
                 .andExpect(status().isNoContent());
 
         MvcResult result = mockMvc.perform(
@@ -328,7 +331,7 @@ class UserControllerTest {
     )
     @DisplayName("""
             Verify that updateUserRole() endpoint works as expected
-            When updating user to user (nothing should happen)            
+            When updating user to user (nothing should happen)
             """)
     @Test
     @WithMockUser(username = EMAIL, password = PASSWORD, authorities = "ROLE_ADMIN")
@@ -351,5 +354,133 @@ class UserControllerTest {
         // expecting that user will only have user role
         assertEquals(1, userAdminResponseDto.getRolesIds().size());
     }
-}
 
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH,
+                    INSERT_ADMIN_TO_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    DELETE_ALL_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that updateUserRole() endpoint works as expected
+            When updating admin to admin (nothing should happen)
+            """)
+    @Test
+    @WithMockUser(username = EMAIL, password = PASSWORD, authorities = "ROLE_ADMIN")
+    public void changeUserRole_AdminToAdmin_NothingChanges() throws Exception {
+        String roleName = "admin";
+
+        Long id = 1L;
+
+        MvcResult result = mockMvc.perform(
+                        put("/users/" + id)
+                                .param("role_name", roleName)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserAdminResponseDto userAdminResponseDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(), UserAdminResponseDto.class
+        );
+
+        // expecting that user will have user and admin roles
+        assertEquals(2, userAdminResponseDto.getRolesIds().size());
+    }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH,
+                    INSERT_ADMIN_TO_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    DELETE_ALL_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that updateUserRole() endpoint works as expected
+            When updating admin to user
+            """)
+    @Test
+    @WithMockUser(username = EMAIL, password = PASSWORD, authorities = "ROLE_ADMIN")
+    public void changeUserRole_AdminToUser_Success() throws Exception {
+        String roleName = "user";
+
+        Long id = 1L;
+
+        when(notificationStrategy.getNotificationService(any(), anyString()))
+                .thenReturn(mock(RoleUpdatingNotificationService.class));
+
+        MvcResult result = mockMvc.perform(
+                        put("/users/" + id)
+                                .param("role_name", roleName)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserAdminResponseDto userAdminResponseDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(), UserAdminResponseDto.class
+        );
+
+        // expecting that user will only have user role
+        assertEquals(1, userAdminResponseDto.getRolesIds().size());
+    }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    INSERT_USER_FILE_PATH,
+                    INSERT_USER_TO_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_USERS_FILE_PATH,
+                    DELETE_ALL_USER_ROLES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that updateUserRole() endpoint works as expected
+            When updating user to admin
+            """)
+    @Test
+    @WithMockUser(username = EMAIL, password = PASSWORD, authorities = "ROLE_ADMIN")
+    public void changeUserRole_UserToAdmin_Success() throws Exception {
+        String roleName = "admin";
+
+        Long id = 1L;
+
+        when(notificationStrategy.getNotificationService(any(), anyString()))
+                .thenReturn(mock(RoleUpdatingNotificationService.class));
+
+        MvcResult result = mockMvc.perform(
+                        put("/users/" + id)
+                                .param("role_name", roleName)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        UserAdminResponseDto userAdminResponseDto = objectMapper.readValue(
+                result.getResponse().getContentAsString(), UserAdminResponseDto.class
+        );
+
+        // expecting that user will have user and admin roles
+        assertEquals(2, userAdminResponseDto.getRolesIds().size());
+    }
+}
