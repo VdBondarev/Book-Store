@@ -2,13 +2,12 @@ package book.store.controller;
 
 import static book.store.holder.LinksHolder.DELETE_ALL_CATEGORIES_FILE_PATH;
 import static book.store.holder.LinksHolder.INSERT_CATEGORY_FILE_PATH;
+import static book.store.holder.LinksHolder.INSERT_FIVE_CATEGORIES_FILE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import book.store.dto.category.CategoryResponseDto;
-import book.store.model.Book;
-import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -28,8 +26,6 @@ class CategoryControllerTest {
     protected static MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
-    @MockBean
-    private AdminNotificationStrategy<Book> notificationStrategy;
 
     @BeforeAll
     static void beforeAll(@Autowired WebApplicationContext applicationContext) {
@@ -99,4 +95,37 @@ class CategoryControllerTest {
 
         assertEquals(EntityNotFoundException.class, result.getResolvedException().getClass());
     }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_CATEGORIES_FILE_PATH,
+                    INSERT_FIVE_CATEGORIES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_CATEGORIES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that getAll() endpoint works as expected
+            """)
+    @Test
+    public void getAll_ValidRequest_Success() throws Exception {
+        MvcResult result = mockMvc.perform(
+                        get("/categories")
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        CategoryResponseDto[] actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), CategoryResponseDto[].class
+        );
+
+        int expectedLength = 5;
+        assertEquals(expectedLength, actual.length);
+    }
 }
+

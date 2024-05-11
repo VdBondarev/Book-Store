@@ -13,4 +13,6 @@ public interface LinksHolder {
             "classpath:database/insert-user-to-user_roles.sql";
     String INSERT_ADMIN_TO_USER_ROLES_FILE_PATH =
             "classpath:database/insert-admin-to-user_roles.sql";
+    String INSERT_FIVE_CATEGORIES_FILE_PATH =
+            "classpath:database/insert-five-categories.sql";
 }
