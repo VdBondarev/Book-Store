@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -18,6 +19,7 @@ import book.store.dto.category.CreateCategoryRequestDto;
 import book.store.model.Category;
 import book.store.telegram.strategy.notification.AdminNotificationStrategy;
 import book.store.telegram.strategy.notification.category.CategoryCreationNotificationService;
+import book.store.telegram.strategy.notification.category.CategoryDeletingNotificationService;
 import book.store.telegram.strategy.notification.category.CategoryUpdatingNotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
@@ -283,49 +285,57 @@ class CategoryControllerTest {
 
         assertEquals(expected, actual);
     }
+
+    @Sql(
+            scripts = {
+                    DELETE_ALL_CATEGORIES_FILE_PATH,
+                    INSERT_FIVE_CATEGORIES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+    )
+    @Sql(
+            scripts = {
+                    DELETE_ALL_CATEGORIES_FILE_PATH
+            },
+            executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD
+    )
+    @DisplayName("""
+            Verify that deleteById() endpoint works as expected
+            """)
+    @Test
+    @WithMockUser(username = EMAIL, authorities = ADMIN)
+    public void deleteById_ValidRequest_Success() throws Exception {
+        when(notificationStrategy.getNotificationService(anyString(), anyString()))
+                .thenReturn(mock(CategoryDeletingNotificationService.class));
+
+        Long id = 1L;
+
+        mockMvc.perform(
+                delete("/categories/" + id)
+        )
+                .andExpect(status().isNoContent());
+
+        id = 2L;
+
+        // after deleting 2 categories we are expecting that there is only 3 categories left in db
+        mockMvc.perform(
+                        delete("/categories/" + id)
+                )
+                .andExpect(status().isNoContent());
+
+        // now sending request to getAll() and expect that we get 3 categories only
+        MvcResult result = mockMvc.perform(
+                        get("/categories")
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        CategoryResponseDto[] actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(), CategoryResponseDto[].class
+        );
+
+        int expectedLength = 3;
+
+        assertEquals(expectedLength, actual.length);
+    }
 }
-/**
- *
- *     @PutMapping("/{id}")
- *     @PreAuthorize("hasRole('ROLE_ADMIN')")
- *     @Operation(summary = "Update an existing category",
- *             description = "Endpoint for updating a category in db. Allowed for admins only")
- *     public CategoryResponseDto updateCategoryById(
- *             @PathVariable Long id,
- *             @RequestBody @Valid CategoryUpdateDto updateDto) {
- *         return categoryService.updateById(id, updateDto);
- *     }
- *
- *     @DeleteMapping("/{id}")
- *     @PreAuthorize("hasRole('ROLE_ADMIN')")
- *     @ResponseStatus(HttpStatus.NO_CONTENT)
- *     @Operation(summary = "Delete an existing category",
- *             description = "Endpoint for deleting a category from db. Allowed for admins only")
- *     public void deleteById(
- *             @PathVariable Long id) {
- *         categoryService.deleteById(id);
- *     }
- * }
- */
-/*
-@Override
-    public void deleteById(Long id) {
-        if (categoryRepository.findById(id).isEmpty()) {
-            return;
-        }
-        categoryRepository.deleteById(id);
-        sendMessage(TELEGRAM, CATEGORY_DELETING, null, new Category(id));
-    }
-
-    @Override
-    public CategoryResponseDto updateById(Long id, CategoryUpdateDto updateDto) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Can't find a category by id " + id));
-        category = categoryMapper.toModel(category, updateDto);
-        categoryRepository.save(category);
-        sendMessage(TELEGRAM, CATEGORY_UPDATING, null, category);
-        return categoryMapper.toResponseDto(category);
-    }
- */
-
