@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/categories")
 @RequiredArgsConstructor
-public class CategoriesController {
+public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/{id}")
@@ -45,6 +45,7 @@ public class CategoriesController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Create a new category",
             description = "Endpoint for inserting a category into db. Allowed for admins only")
+    @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponseDto create(@RequestBody @Valid CreateCategoryRequestDto requestDto) {
         return categoryService.create(requestDto);
     }

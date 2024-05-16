@@ -20,7 +20,6 @@ public record BookCreateRequestDto(
         BigDecimal price,
         @StartsWithCapital
         String description,
-        @StartsWithCapital
         String coverImage,
         @NotEmpty
         Set<Long> categoriesIds
